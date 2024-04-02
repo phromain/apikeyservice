@@ -1,13 +1,14 @@
-package fr.rp.resources;
+package fr.rp.resource;
 
-
-import fr.rp.dto.KeyDto;
-import fr.rp.dto.MailDto;
-import fr.rp.entities.ClientEntity;
+import fr.rp.Dto.KeyDto;
+import fr.rp.entrant.Mail;
 import fr.rp.repositories.ClientRepository;
 import fr.rp.repositories.MailRepository;
+import fr.rp.entities.ClientEntity;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -75,15 +76,17 @@ public class ApikeyResource {
     @Path("/{apikey}/mail")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.TEXT_PLAIN)
-    public Response saveMail(@PathParam("apikey") String apikey, MailDto mailDto){
+    public Response saveMail(@PathParam("apikey") String apikey,@Valid Mail mail){
         ClientEntity client = clientRepository.clientByApiKey(apikey);
-
         if (client != null ){
-
             try {
-                mailRepository.enregistrerMail(mailDto,client);
+                mailRepository.enregistrerMail(mail,client);
                 return Response.ok()
                         .entity("Mail enregistré")
+                        .build();
+            } catch (ConstraintViolationException e) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(e.getMessage())
                         .build();
             } catch (Exception e) {
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR)

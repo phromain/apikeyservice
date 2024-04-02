@@ -1,8 +1,10 @@
 package fr.rp.entities;
 
-import fr.rp.dto.MailDto;
+
+import fr.rp.entrant.Mail;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
@@ -24,9 +26,9 @@ public class MailEntity {
     @JoinColumn(name = "ID_CLIENT")
     private ClientEntity client;
 
-    public MailEntity(MailDto mailDto, ClientEntity client) {
-        this.destinataire = mailDto.getDestinataire();
-        this.objet = mailDto.getObjet();
+    public MailEntity(Mail mail, ClientEntity client) {
+        this.destinataire = mail.getDestinataire();
+        this.objet = mail.getObjet();
         this.dateEnvoi = LocalDate.now();
         this.client = client;
     }

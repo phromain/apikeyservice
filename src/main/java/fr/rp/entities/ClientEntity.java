@@ -1,9 +1,13 @@
 package fr.rp.entities;
 
-import fr.rp.dto.ClientDtoEntrant;
+
+
+import fr.rp.entrant.Client;
 import fr.rp.service.ApiKeyGenerator;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity(name ="APIKEYCLIENT")
 @Getter
@@ -25,11 +29,11 @@ public class ClientEntity {
     @Column(name= "ACTIVE")
     private boolean statut;
 
-    public ClientEntity(ClientDtoEntrant clientDtoEntrant) {
+    public ClientEntity(Client client) {
         this.apiKey = ApiKeyGenerator.generateApiKey();
-        this.email = clientDtoEntrant.getEmail();
-        this.nomClient = clientDtoEntrant.getNomClient();
-        this.quota = clientDtoEntrant.getQuota();
+        this.email = client.getEmail();
+        this.nomClient = client.getNomClient();
+        this.quota = client.getQuota();
         this.statut = true;
     }
 

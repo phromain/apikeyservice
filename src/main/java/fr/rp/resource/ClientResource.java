@@ -1,22 +1,22 @@
-package fr.rp.resources;
+package fr.rp.resource;
 
-
-import fr.rp.dto.ClientDtoEntrant;
-import fr.rp.dto.ClientDtoSortant;
-import fr.rp.dto.MailDto;
-import fr.rp.entities.ClientEntity;
+import fr.rp.Dto.ClientDto;
+import fr.rp.Dto.MailDto;
+import fr.rp.entrant.Client;
 import fr.rp.repositories.ClientRepository;
 import fr.rp.restClient.MailServiceRemote;
+import fr.rp.entities.ClientEntity;
 import fr.rp.service.ApiKeyGenerator;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-
 
 import java.util.List;
 
@@ -34,7 +34,7 @@ public class ClientResource {
     @APIResponse(responseCode = "200", description = " Liste Client")
     public Response getListClient (){
         List<ClientEntity> listeClients = clientRepository.listAll();
-        return Response.ok(ClientDtoSortant.toDtoListContinent(listeClients)).build();
+        return Response.ok(ClientDto.toDtoListClient(listeClients)).build();
     }
 
 
@@ -45,44 +45,39 @@ public class ClientResource {
     @Operation(summary = "Crée un client", description = " Crée un client")
     @APIResponse(responseCode = "200", description = "Client Créer")
     @APIResponse(responseCode = "200", description = "API-KEY créer et Erreur lors de l'envoi du mail")
-    @APIResponse(responseCode = "400", description = "paramètre absent")
-    @APIResponse(responseCode = "400", description = "informations manquantes")
+    @APIResponse(responseCode = "400", description = "Retounre l'erreur sur les champs")
     @APIResponse(responseCode = "500", description = "Une erreur est survenue")
     @Produces(MediaType.TEXT_PLAIN)
-    public Response createClient (ClientDtoEntrant clientDtoEntrant){
-        if(clientDtoEntrant == null){
+    public Response createClient (@Valid Client client){
+
+        if(client == null){
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("paramètre absent")
                     .build();
         }
-        if (!clientDtoEntrant.champsValide()){
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("informations manquantes")
-                    .build();
-        }
         try{
-            ClientEntity client = new ClientEntity(clientDtoEntrant);
-            System.out.println(client);
-            clientRepository.persist(client);
+            ClientEntity clientEntity = new ClientEntity(client);
+            clientRepository.persist(clientEntity);
+            MailDto mailDto = new MailDto(clientEntity);
+            mailDto.mailClientCreated(clientEntity.getApiKey(),mailDto);
 
-            MailDto mailDto = new MailDto(client);
-            mailDto.mailClientCreated(client.getApiKey(),mailDto);
-            Response responseMail = mailServiceRemote.envoyerMail("azerty",mailDto);
-            if (responseMail.getStatus() != 200) {
-                return Response.ok()
-                        .entity("API-KEY créer et Erreur lors de l'envoi du mail").build();
+            if (mailServiceRemote.envoyerMail("azerty",mailDto).getStatus() != 200) {
+                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                        .entity("Une erreur est survenue :")
+                        .build();
             }
-
             return Response.ok()
                     .entity("Client Créer").build();
+        } catch (ConstraintViolationException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(e.getMessage())
+                    .build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity("Une erreur est survenue : " + e.getMessage())
                     .build();
         }
-
     }
-
 
 
 
@@ -96,8 +91,8 @@ public class ClientResource {
         ClientEntity client = clientRepository.findById(id);
 
         if (client != null ){
-            ClientDtoSortant clientDtoSortant = new ClientDtoSortant(client);
-            return Response.ok(clientDtoSortant).build();
+            ClientDto clientDto = new ClientDto(client);
+            return Response.ok(clientDto).build();
         }
         return Response.status(Response.Status.NOT_FOUND)
                 .entity("Key non trouvée")
@@ -121,6 +116,12 @@ public class ClientResource {
         if (client == null ){
             return Response.status(Response.Status.NOT_FOUND)
                     .entity("Client non trouvée")
+                    .build();
+        }
+
+        if (newQuota.isEmpty() || newQuota == null ){
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Valeur vide ou inexistante")
                     .build();
         }
         try {
