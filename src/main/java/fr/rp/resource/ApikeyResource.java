@@ -1,7 +1,7 @@
 package fr.rp.resource;
 
-import fr.rp.Dto.KeyDto;
-import fr.rp.entrant.Mail;
+import fr.rp.DtoOut.KeyDtoOut;
+import fr.rp.DtoIn.MailDtoIn;
 import fr.rp.repositories.ClientRepository;
 import fr.rp.repositories.MailRepository;
 import fr.rp.entities.ClientEntity;
@@ -36,8 +36,8 @@ public class ApikeyResource {
 
         if (client != null ){
 
-            KeyDto keyDto = new KeyDto(client);
-            return Response.ok(keyDto)
+            KeyDtoOut keyDtoOut = new KeyDtoOut(client);
+            return Response.ok(keyDtoOut)
                     .build();
 
         }
@@ -72,15 +72,21 @@ public class ApikeyResource {
     @Operation(summary = "Enregistrement Mail", description = "Enregistrement le mail dans la bdd")
     @APIResponse(responseCode = "200", description = "Mail enregistré")
     @APIResponse(responseCode = "404", description = "Key non trouvée")
+    @APIResponse(responseCode = "400", description = "Erreur sur les champs")
     @APIResponse(responseCode = "500", description = "Une erreur est survenue Mail non enregistré")
     @Path("/{apikey}/mail")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.TEXT_PLAIN)
-    public Response saveMail(@PathParam("apikey") String apikey,@Valid Mail mail){
+    public Response saveMail(@PathParam("apikey") String apikey,@Valid MailDtoIn mailDtoIn){
+        if(mailDtoIn == null){
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("paramètre absent")
+                    .build();
+        }
         ClientEntity client = clientRepository.clientByApiKey(apikey);
         if (client != null ){
             try {
-                mailRepository.enregistrerMail(mail,client);
+                mailRepository.enregistrerMail(mailDtoIn,client);
                 return Response.ok()
                         .entity("Mail enregistré")
                         .build();
@@ -90,7 +96,7 @@ public class ApikeyResource {
                         .build();
             } catch (Exception e) {
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .entity("Une erreur est survenue Mail non enregistré ")
+                        .entity("Une erreur est survenue Mail non enregistré")
                         .build();
             }
         }
@@ -110,8 +116,6 @@ public class ApikeyResource {
         ClientEntity client = clientRepository.clientByApiKey(apikey);
 
         if (client != null ) {
-            KeyDto keyDto = new KeyDto(client);
-
             if (client.isStatut()) {
                 return Response.ok()
                         .entity("Compte Activé.")

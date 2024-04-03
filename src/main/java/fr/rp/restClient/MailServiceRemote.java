@@ -1,7 +1,7 @@
 package fr.rp.restClient;
 
 
-import fr.rp.Dto.MailDto;
+import fr.rp.DtoOut.MailDtoOut;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -20,7 +20,7 @@ public interface MailServiceRemote {
     @Path("")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.TEXT_PLAIN)
-    Response envoyerMail(@HeaderParam ("API-KEY") String apiKey, MailDto mailDto);
+    Response envoyerMail(@HeaderParam ("API-KEY") String apiKey, MailDtoOut mailDtoOut);
 
 
 }

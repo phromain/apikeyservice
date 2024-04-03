@@ -1,8 +1,8 @@
 package fr.rp.resource;
 
-import fr.rp.Dto.ClientDto;
-import fr.rp.Dto.MailDto;
-import fr.rp.entrant.Client;
+import fr.rp.DtoIn.Client;
+import fr.rp.DtoOut.ClientDtoOut;
+import fr.rp.DtoOut.MailDtoOut;
 import fr.rp.repositories.ClientRepository;
 import fr.rp.restClient.MailServiceRemote;
 import fr.rp.entities.ClientEntity;
@@ -34,7 +34,7 @@ public class ClientResource {
     @APIResponse(responseCode = "200", description = " Liste Client")
     public Response getListClient (){
         List<ClientEntity> listeClients = clientRepository.listAll();
-        return Response.ok(ClientDto.toDtoListClient(listeClients)).build();
+        return Response.ok(ClientDtoOut.toDtoListClient(listeClients)).build();
     }
 
 
@@ -44,12 +44,11 @@ public class ClientResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Operation(summary = "Crée un client", description = " Crée un client")
     @APIResponse(responseCode = "200", description = "Client Créer")
-    @APIResponse(responseCode = "200", description = "API-KEY créer et Erreur lors de l'envoi du mail")
-    @APIResponse(responseCode = "400", description = "Retounre l'erreur sur les champs")
+    @APIResponse(responseCode = "400", description = "paramètre absent")
+    @APIResponse(responseCode = "400", description = "Retourne l'erreur sur les champs")
     @APIResponse(responseCode = "500", description = "Une erreur est survenue")
     @Produces(MediaType.TEXT_PLAIN)
     public Response createClient (@Valid Client client){
-
         if(client == null){
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("paramètre absent")
@@ -58,14 +57,11 @@ public class ClientResource {
         try{
             ClientEntity clientEntity = new ClientEntity(client);
             clientRepository.persist(clientEntity);
-            MailDto mailDto = new MailDto(clientEntity);
-            mailDto.mailClientCreated(clientEntity.getApiKey(),mailDto);
+            MailDtoOut mailDtoOut = new MailDtoOut(clientEntity);
+            mailDtoOut.mailClientCreated(clientEntity.getApiKey(), mailDtoOut);
 
-            if (mailServiceRemote.envoyerMail("azerty",mailDto).getStatus() != 200) {
-                return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                        .entity("Une erreur est survenue :")
-                        .build();
-            }
+            mailServiceRemote.envoyerMail("azerty", mailDtoOut);
+
             return Response.ok()
                     .entity("Client Créer").build();
         } catch (ConstraintViolationException e) {
@@ -89,10 +85,9 @@ public class ClientResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     public Response findClientById(@PathParam("id") Integer id){
         ClientEntity client = clientRepository.findById(id);
-
         if (client != null ){
-            ClientDto clientDto = new ClientDto(client);
-            return Response.ok(clientDto).build();
+            ClientDtoOut clientDtoOut = new ClientDtoOut(client);
+            return Response.ok(clientDtoOut).build();
         }
         return Response.status(Response.Status.NOT_FOUND)
                 .entity("Key non trouvée")
@@ -104,7 +99,8 @@ public class ClientResource {
     @Transactional
     @Operation(summary = "Met à jour le Quota", description = "Modifie le Quota ")
     @APIResponse(responseCode = "200", description = "Quota mis à jour ")
-    @APIResponse(responseCode = "400", description = "informations manquantes ou incorrecte (nombre)")
+    @APIResponse(responseCode = "400", description = "Valeur vide ou inexistante")
+    @APIResponse(responseCode = "400", description = "nombre incorrect ex: 500")
     @APIResponse(responseCode = "404", description = "Client non trouvée")
     @APIResponse(responseCode = "500", description = "Une erreur est survenue")
     @Path("/{id}/quota")
@@ -115,11 +111,11 @@ public class ClientResource {
 
         if (client == null ){
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Client non trouvée")
+                    .entity("Client non trouvé")
                     .build();
         }
 
-        if (newQuota.isEmpty() || newQuota == null ){
+        if (newQuota.isEmpty()){
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("Valeur vide ou inexistante")
                     .build();
@@ -134,7 +130,7 @@ public class ClientResource {
 
         } catch (NumberFormatException e) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("informations manquantes ou incorrecte (nombre)")
+                    .entity("nombre incorrect ex: 500")
                     .build();
 
         } catch (Exception e) {
@@ -148,39 +144,30 @@ public class ClientResource {
     @Transactional
     @Operation(summary = "Reinitialise la clé API-KEY", description = " Régénere une nouvelle API-KEY")
     @APIResponse(responseCode = "200", description = " API-KEY régénérée ")
-    @APIResponse(responseCode = "200", description = " API-KEY régénérée et Erreur lors de l'envoi du mail")
-    @APIResponse(responseCode = "404", description = "Client non trouvée")
+    @APIResponse(responseCode = "404", description = "Client non trouvé")
     @APIResponse(responseCode = "500", description = "Une erreur est survenue")
     @Path("/{id}/newkey")
     @Produces(MediaType.TEXT_PLAIN)
     public Response renewKeyById(@PathParam("id") Integer id){
         ClientEntity client = clientRepository.findById(id);
-
         if (client == null ){
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Client non trouvée")
+                    .entity("Client non trouvé")
                     .build();
         }
-
         try{
             String newKey = ApiKeyGenerator.generateApiKey();
             client.setApiKey(newKey);
             clientRepository.persist(client);
 
-            MailDto mailDto = new MailDto(client);
-            mailDto.mailClientRenew(client.getApiKey(),mailDto);
-            Response responseMail = mailServiceRemote.envoyerMail("azerty",mailDto);
-            if (responseMail.getStatus() != 200) {
-                return Response.ok()
-                        .entity("API-KEY régénérée et Erreur lors de l'envoi du mail")
-                        .build();
-            }
-
+            MailDtoOut mailDtoOut = new MailDtoOut(client);
+            mailDtoOut.mailClientRenew(client.getApiKey(), mailDtoOut);
+            mailServiceRemote.envoyerMail("azerty", mailDtoOut);
             return Response.ok()
                     .entity("API-KEY régénérée").build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("Une erreur est survenue : " + e.getMessage())
+                    .entity("Une erreur est survenue")
                     .build();
         }
     }

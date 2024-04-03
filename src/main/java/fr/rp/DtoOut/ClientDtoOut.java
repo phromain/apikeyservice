@@ -1,4 +1,4 @@
-package fr.rp.Dto;
+package fr.rp.DtoOut;
 
 
 import fr.rp.entities.ClientEntity;
@@ -10,7 +10,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class ClientDto {
+public class ClientDtoOut {
 
     private Integer idClient;
     private String email;
@@ -18,7 +18,9 @@ public class ClientDto {
     private Integer quota;
     private boolean statut;
 
-    public ClientDto(ClientEntity client) {
+    // Contructs
+
+    public ClientDtoOut(ClientEntity client) {
         this.idClient = client.getIdClient();
         this.email = client.getEmail();
         this.nomClient = client.getNomClient();
@@ -26,12 +28,16 @@ public class ClientDto {
         this.statut = client.isStatut();
     }
 
-    public static List<ClientDto> toDtoListClient(List<ClientEntity> clientEntityList){
-        List<ClientDto> listeClientDtoEntrant = new ArrayList<>();
+    private ClientDtoOut() {}
+
+    // Methods
+
+    public static List<ClientDtoOut> toDtoListClient(List<ClientEntity> clientEntityList){
+        List<ClientDtoOut> listeClientDtoOutEntrant = new ArrayList<>();
         for (ClientEntity clientEntity : clientEntityList){
-            listeClientDtoEntrant.add(new ClientDto(clientEntity));
+            listeClientDtoOutEntrant.add(new ClientDtoOut(clientEntity));
         }
-        return listeClientDtoEntrant;
+        return listeClientDtoOutEntrant;
     }
 
 }

@@ -1,6 +1,6 @@
 package fr.rp.repositories;
 
-import fr.rp.entrant.Mail;
+import fr.rp.DtoIn.MailDtoIn;
 import fr.rp.entities.ClientEntity;
 import fr.rp.entities.MailEntity;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
@@ -11,8 +11,8 @@ import java.time.LocalDate;
 @RequestScoped
 public class MailRepository implements PanacheRepositoryBase<MailEntity, Integer> {
 
-    public void enregistrerMail(Mail mail, ClientEntity client){
-        MailEntity mailEntity = new MailEntity(mail,client);
+    public void enregistrerMail(MailDtoIn mailDtoIn, ClientEntity client){
+        MailEntity mailEntity = new MailEntity(mailDtoIn,client);
         this.persist(mailEntity);
     }
 

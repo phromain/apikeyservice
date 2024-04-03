@@ -1,4 +1,4 @@
-package fr.rp.Dto;
+package fr.rp.DtoOut;
 
 
 import fr.rp.entities.ClientEntity;
@@ -8,14 +8,18 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class KeyDto {
+public class KeyDtoOut {
 
     private String apikey;
     private Integer quota;
 
-    public KeyDto() {
+// Attribus
+
+
+    private KeyDtoOut() {
     }
-    public KeyDto(ClientEntity clientEntity) {
+
+    public KeyDtoOut(ClientEntity clientEntity) {
         this.apikey = clientEntity.getApiKey();
         this.quota = clientEntity.getQuota();
     }

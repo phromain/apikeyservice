@@ -2,7 +2,7 @@ package fr.rp.entities;
 
 
 
-import fr.rp.entrant.Client;
+import fr.rp.DtoIn.Client;
 import fr.rp.service.ApiKeyGenerator;
 import jakarta.persistence.*;
 import lombok.Getter;
