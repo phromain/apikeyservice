@@ -1,3 +1,48 @@
+Endpoint : /apikey
+
+## Docker
+### Pour voir les réseaux
+
+docker network ls
+
+
+### Pour avoir des détails sur le réseau
+
+docker network inspect nutri-network
+
+
+
+### Pour creer Image Docker
+
+Droite Maven -> Lifecycle
+
+    clean
+
+    package
+
+ou
+
+./mvnw clean
+
+./mvnw package
+
+
+
+### Pour créer l'image:
+
+docker build -f src/main/docker/Dockerfile.jvm -t romainph/apikey-api .
+
+Vous pouvez recuperer cette commande dans docker/Dockerfile.jvm , il faudra mettre le nom par nom_repo_docker/nom_a_donner_image . (le point c est pour indiquer qu'on est dans le dossier)
+
+
+
+### Cette Commande creer un container docker et l ajoute au réseau en y ajoutant un alias
+
+docker run -i --name apikey-api  --network nutri-network --network-alias apikey -p 8081:8080 romainph/apikey-api
+
+docker run -i --name NOM_CONTAINER --network NOM_RESEAU --network-alias ALIAS(dans le reseau du container) -p PORT_DEV:PORT_PROD NOM_IMAGE .
+
+
 # apikeyservice
 
 This project uses Quarkus, the Supersonic Subatomic Java Framework.
