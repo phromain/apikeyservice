@@ -1,7 +1,6 @@
 package fr.rp.resource;
 
-
-import fr.rp.DtoIn.Client;
+import fr.rp.DtoIn.ClientDtoIn;
 import fr.rp.DtoOut.ClientDtoOut;
 import fr.rp.DtoOut.MailDtoOut;
 import fr.rp.entities.ClientEntity;
@@ -38,7 +37,7 @@ class ClientResourceTest {
     ClientRepository clientRepository;
     List<ClientEntity> clients = new ArrayList<>();
     List<ClientDtoOut> clientsDto = new ArrayList<>();
-    Client client;
+    ClientDtoIn client;
     ClientEntity clientEntity;
     ClientDtoOut clientDtoOut;
     MailDtoOut mailDtoOut;
@@ -50,7 +49,7 @@ class ClientResourceTest {
         MockitoAnnotations.openMocks(this);
         clients = clientRepository.listAll();
         clientsDto = ClientDtoOut.toDtoListClient(clients);
-        client = new Client("test@mail.fr","TEST",0);
+        client = new ClientDtoIn("test@mail.fr","TEST",0);
         clientEntity = clientRepository.findById(1);
         apikeyTrue = clientEntity.getApiKey();
         clientDtoOut = new ClientDtoOut(clientEntity);

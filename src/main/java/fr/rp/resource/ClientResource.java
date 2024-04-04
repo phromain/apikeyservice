@@ -1,6 +1,7 @@
 package fr.rp.resource;
 
-import fr.rp.DtoIn.Client;
+
+import fr.rp.DtoIn.ClientDtoIn;
 import fr.rp.DtoOut.ClientDtoOut;
 import fr.rp.DtoOut.MailDtoOut;
 import fr.rp.repositories.ClientRepository;
@@ -48,7 +49,7 @@ public class ClientResource {
     @APIResponse(responseCode = "400", description = "Retourne l'erreur sur les champs")
     @APIResponse(responseCode = "500", description = "Une erreur est survenue")
     @Produces(MediaType.TEXT_PLAIN)
-    public Response createClient (@Valid Client client){
+    public Response createClient (@Valid ClientDtoIn client){
         if(client == null){
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("paramètre absent")

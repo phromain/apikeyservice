@@ -10,7 +10,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class Client {
+public class ClientDtoIn {
 
     @NotNull(message = "L'email ne peut pas être null")
     @NotBlank(message = "L'email ne peut pas être vide")
@@ -29,7 +29,7 @@ public class Client {
 
     // Contructs
 
-    public Client(String email, String nomClient, Integer quota) {
+    public ClientDtoIn(String email, String nomClient, Integer quota) {
         this.email = email;
         this.nomClient = nomClient;
         this.quota = quota;
