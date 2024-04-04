@@ -42,8 +42,8 @@ class ClientResourceTest {
     ClientEntity clientEntity;
     ClientDtoOut clientDtoOut;
     MailDtoOut mailDtoOut;
-
-    String oldKey;
+    String apikeyTrue;
+    static String oldKey;
 
     @BeforeEach
     void setUp() {
@@ -52,8 +52,8 @@ class ClientResourceTest {
         clientsDto = ClientDtoOut.toDtoListClient(clients);
         client = new Client("test@mail.fr","TEST",0);
         clientEntity = clientRepository.findById(1);
+        apikeyTrue = clientEntity.getApiKey();
         clientDtoOut = new ClientDtoOut(clientEntity);
-        oldKey = clientEntity.getApiKey();
     }
 
     @Test
@@ -203,7 +203,7 @@ class ClientResourceTest {
     @Transactional
     void createClient500() {
         mailDtoOut = new MailDtoOut();
-        when(mailServiceRemote.envoyerMail("azerty", mailDtoOut)).thenReturn(Response.status(500).build());
+        when(mailServiceRemote.envoyerMail(apikeyTrue, mailDtoOut)).thenReturn(Response.status(500).build());
 
         given()
                 .contentType(ContentType.JSON)
@@ -383,9 +383,12 @@ class ClientResourceTest {
     }
 
     @Test
+    @Order(7)
     @Transactional
     void renewKeyById500() {
-        when(mailServiceRemote.envoyerMail("azerty", mailDtoOut)).thenReturn(Response.status(500).build());
+        clientEntity = clientRepository.findById(1);
+        oldKey = clientEntity.getApiKey();
+        when(mailServiceRemote.envoyerMail(apikeyTrue, mailDtoOut)).thenReturn(Response.status(500).build());
         Integer id = clientEntity.getIdClient();
         given()
                 .when()
@@ -393,6 +396,15 @@ class ClientResourceTest {
                 .then()
                 .statusCode(500)
                 .body(equalTo("Une erreur est survenue"));
+    }
+
+
+    @Test
+    @Order(8)
+    @Transactional
+    void restoreOldKey() {
+        clientEntity = clientRepository.findById(1);
+        clientEntity.setApiKey(oldKey);
     }
 
 }
